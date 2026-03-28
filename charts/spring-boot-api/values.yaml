@@ -1,0 +1,41 @@
+# vim set filetype=helm:
+# Default values for spring-boot-api.
+replicaCount: 1 # Overridden  via AppSet
+
+image:
+  repository: busybox
+  tag: stable
+  pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: ""
+
+envName: "default"
+
+# Pick up some safe values
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 200m
+    memory: 256Mi
+
+ingress:
+  enabled: true
+  className: "nginx"
+  host: "api.local"
+
+service:
+  type: ClusterIP
+  port: 8080
+  logsPort: 8081
+  soapPort: 8082
+
+# Example JSON mounted to ConfigMap
+configJson: |
+  {
+    "app_name": "Spring-Boot API",
+    "status": "active",
+    "features": ["api", "logs", "soap"]
+  }

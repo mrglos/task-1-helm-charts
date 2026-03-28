@@ -1,0 +1,65 @@
+# vim: set filetype=helm:
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "spring-boot-api.fullname" . }}
+  annotations:
+    # Requirement: Checksum to detect changes in ConfigMap/Secret
+    checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1        # Creates new pod before removing the old one
+      maxUnavailable: 0  # Enforces zero-downtime Gwarantuje brak downtime
+  selector:
+    matchLabels:
+      {{- include "spring-boot-api.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "spring-boot-api.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          ports:
+            - name: 
+              containerPort: 8080
+            - name: logs
+              containerPort: 8081
+            - name: soap
+              containerPort: 8082
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: SPRING_PROFILES_ACTIVE
+              value: {{ .Values.envName }}
+          # Inject secrets as env variables
+          envFrom:
+            - secretRef:
+                name: {{ include "spring-boot-api.fullname" . }}-random-secrets
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 15
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "wget -qO- http://localhost:8080/service/shutdown || true"]
+          volumeMounts:
+            - name: config-volume
+              mountPath: /app/config.json
+              subPath: config.json
+      volumes:
+        - name: config-volume
+          configMap:
+            name: {{ include "spring-boot-api.fullname" . }}-config
