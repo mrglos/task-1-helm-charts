@@ -1,0 +1,8 @@
+# vim: set filetype=helm:
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "spring-boot-api.fullname" . }}-config
+data:
+  config.json: |
+    {{- .Values.configJson | nindent 4 }}

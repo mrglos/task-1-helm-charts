@@ -1,0 +1,22 @@
+# vim: set filetype=helm:
+apiVersion: v1
+kind: Service
+metadata:
+  name: { { include "spring-boot-api.fullname" . } }
+  labels: { { - include "spring-boot-api.selectorLabels" . | nindent 4 } }
+spec:
+  type: { { .Values.service.type } }
+  ports:
+    - port: { { .Values.service.port } }
+      targetPort: api
+      protocol: TCP
+      name: api
+    - port: { { .Values.service.logsPort } }
+      targetPort: logs
+      protocol: TCP
+      name: logs
+    - port: { { .Values.service.soapPort } }
+      targetPort: soap
+      protocol: TCP
+      name: soap
+  selector: { { - include "spring-boot-api.selectorLabels" . | nindent 4 } }
