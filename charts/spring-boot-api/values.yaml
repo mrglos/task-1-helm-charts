@@ -5,7 +5,6 @@ replicaCount: 1 # Overridden  via AppSet
 image:
   repository: busybox
   tag: stable
-  pullPolicy: IfNotPresent
 
 nameOverride: ""
 fullnameOverride: ""
