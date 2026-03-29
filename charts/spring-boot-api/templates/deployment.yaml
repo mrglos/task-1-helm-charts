@@ -24,6 +24,12 @@ spec:
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          # Start the application and keep the container running to allow for liveness/readiness probes
+          command: ["/bin/sh", "-c", "httpd -f -p 8080 -h /app && sleep infinity"]
+          # Requirement: let Pods start with arg "--spring.profiles.active=dev" for development
+          # environment and "--spring.profiles.active=prd" for production
+          args:
+            - "--spring.profiles.active={{ .Values.envName }}"
           ports:
             - name: 
               containerPort: 8080
